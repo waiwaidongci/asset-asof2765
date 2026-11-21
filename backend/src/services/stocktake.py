@@ -119,8 +119,13 @@ def execute(lease):
         # 并发补扫已改账：本次租约基于旧输入，结果作废，等新租约按新账重算。
         current_scans = _load_scan_payload(db, batch_id)
         current_checksum = _fingerprint(batch.tools, current_scans)
+        if batch.status != RUNNING:
+            # 新租约已经完成或失败时，迟到的旧领取只能被丢弃，不能改写当前状态。
+            record(db, 'worker', 'stocktake.superseded', batch_id,
+                   note='当前批次已有更新状态，旧计算结果不落账')
+            return
         stale = (current_checksum != leased_checksum or len(current_scans) != leased_count
-                 or batch.attempt != attempt or batch.status != RUNNING)
+                 or batch.attempt != attempt)
         if stale:
             # 仍有新账待算则回到排队；保留尝试次数让新租约继续。
             batch.status = QUEUED
