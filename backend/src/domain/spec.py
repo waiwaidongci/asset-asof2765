@@ -37,7 +37,7 @@ SPEC = {
     "decision": "台账复核",
     "action": "提交盘点意见",
     "modes": ["确认盘点", "登记借出追还", "补正交接记录"],
-    "pages": ["值班总览", "交接事件", "期末盘点", "快照与月度勾稽", "台账复核", "盘点报告交付"],
+    "pages": ["值班总览", "交接事件", "期末盘点", "快照与月度勾稽", "台账复核", "盘点报告交付", "扫码实盘对账"],
     "fields": [
         {"key": "event_id", "label": "事件编号", "type": "string", "required": True, "max_length": 80},
         {"key": "asset_id", "label": "工具编号", "type": "string", "required": True, "max_length": 80},

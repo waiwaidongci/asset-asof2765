@@ -18,6 +18,29 @@
 | 快照与月度勾稽 | 查看业务指标、证据表和解释，通过来源链接回查数据。 |
 | 台账复核 | 查看待处理或已完成记录。复核主管可提交台账复核及依据。 |
 | 盘点报告交付 | 按批查找结果，核对复核状态并下载相应的 CSV。 |
+| 扫码实盘对账 | 建立月末快照批次、并发补扫模糊标签，按最大匹配对账并查询盘到、待核与误扫依据。 |
+
+## 扫码实盘对账口径
+
+旧标签磨损后一次扫码可能读出多个候选工具号。系统把「扫码」与「月末在管工具」构造成二部图，按下列规则对账：
+
+- 每条扫码可带多个候选号，每件在管工具最多配一次；目标是尽量多配，即求**最大基数匹配**（Hopcroft–Karp）。借出、退役工具不参与配对，仅作为误扫判定依据。
+- 只有在**所有**最大匹配里都取同一条边的配对才记为「盘到」；可替换的配对按交替环、交替增广链的连通结构整组列为「待核」。判定基于有向残量图的强连通分量（Tarjan）、超源与超汇可达性。
+- 新扫码把旧的争议组连到一起时，整批重算并合并为一个组；互不连通的其他组结论保持不变。
+- 并发补扫以扫码流水（只追加）加 `(批次, 扫码编号)` 唯一约束兜底；后台租约在提交前比对输入指纹，补扫产生新账后旧计算结果作废，不会覆盖新账。
+- 计算中断后租约过期可被再次领取，结果与争议组整体替换、先清后写，续跑不重复计件；超过尝试次数标记失败。
+- 盘点页面可按结论筛选「未盘到、借出误扫、退役误扫、无效号误扫」，每条结论都附候选号去向与判定依据；复核主管可对争议组提交组内人工核示，留痕但不改写引擎结论。
+
+### 扫码实盘接口
+
+| 方法与路径 | 角色 | 说明 |
+|---|---|---|
+| `POST /stocktake/batches` | 分析员/主管 | 用月末工具快照建立实盘批次并排队 |
+| `POST /stocktake/batches/{id}/scans` | 分析员/主管 | 并发补扫，只追加流水并触发整批重算 |
+| `POST /stocktake/batches/{id}/rebuild` | 分析员/主管 | 手动重新排队计算 |
+| `GET /stocktake/batches` / `/{id}` | 全部角色 | 批次列表与详情（含扫码流水、结果、核示） |
+| `GET /stocktake/batches/{id}/findings` | 全部角色 | 按 `outcome` 筛选未盘到与各类误扫及依据 |
+| `POST /stocktake/batches/{id}/resolve` | 主管 | 对争议组提交组内人工核示 |
 
 ## 启动
 
@@ -65,3 +88,8 @@ docker compose exec -T backend python -m scripts.seed_demo
 改动前端后执行 `docker compose up -d --build frontend`。改动接口或算法后执行 `docker compose up -d --build backend worker`，再刷新浏览器。如需保留数据，停止时执行 `docker compose down`。使用 `docker compose down -v --remove-orphans` 会清除该项目的数据库、Redis 和报表卷。
 
 `.env.example` 中的 `COMPOSE_PROJECT_NAME`、`FRONTEND_PORT`、`BACKEND_PORT`、`DB_PORT`、`APP_SUBNET` 控制项目隔离。`DB_PASSWORD`、`JWT_SECRET` 和 `SEED_DEMO` 为本机演示默认设置。后端 `constants/enums.py` 与前端 `src/constants/enums.js` 保持角色、运行状态和复核状态一致。项目许可证见 `LICENSE`。
+
+## 测试
+
+- 后端（对账引擎、服务租约、FastAPI 路由）：`python -m unittest discover -s backend/tests`，引擎测试含上千个随机图与暴力枚举全部最大匹配的交叉校验。
+- 前端盘点页冒烟测试：`node --import ./backend/tests/node/register.mjs --test ./backend/tests/node/stocktake-page.test.js`。

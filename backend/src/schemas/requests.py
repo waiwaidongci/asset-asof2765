@@ -28,3 +28,20 @@ class ScheduleRequest(RunRequest):
     recipient: str = Field(min_length=1, max_length=100)
     first_at: datetime
     repeat_daily: bool = False
+
+
+class StocktakeBatchRequest(Request):
+    name: str = Field(min_length=1, max_length=120)
+    snapshot_date: str = Field(min_length=10, max_length=10)
+    tools: list[dict] = Field(min_length=1, max_length=2000)
+
+
+class StocktakeScanRequest(Request):
+    scans: list[dict] = Field(min_length=1, max_length=5000)
+
+
+class DisputeResolveRequest(Request):
+    group_id: int = Field(ge=0)
+    scan_id: str = Field(min_length=1, max_length=80)
+    tool_id: str = Field(min_length=1, max_length=80)
+    note: str = Field(min_length=1, max_length=500)

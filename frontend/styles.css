@@ -141,3 +141,19 @@ body[data-page="results"] .main > div > .panel { margin-top:1rem; }
   .account p { display:none; }
 }
 @media(prefers-reduced-motion:reduce) { *,*::after,*::before { transition:none!important; animation:none!important; } }
+
+/* 扫码实盘对账 */
+.filter-tabs { display:flex; flex-wrap:wrap; gap:.45rem; margin-bottom:.9rem; }
+.filter-tabs .tab { border:1px solid var(--line); background:var(--panel); padding:.35rem .7rem; border-radius:999px; font-size:.86rem; }
+.filter-tabs .tab.active { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.pill[data-state="confirmed"] { border-color:oklch(55% .13 145); }
+.pill[data-state="disputed"] { border-color:oklch(60% .14 75); }
+.pill[data-state="not_counted"], .pill[data-state="unknown_misscan"] { border-color:oklch(58% .16 29); }
+.pill[data-state="lent_misscan"], .pill[data-state="retired_misscan"] { border-color:oklch(55% .12 250); }
+.candidate-list { list-style:none; margin:0; padding:0; display:grid; gap:.25rem; }
+.candidate { font-size:.85rem; padding:.2rem .45rem; border-left:3px solid var(--line); background:color-mix(in oklch,var(--paper) 70%,transparent); }
+.candidate-in_custody { border-left-color:oklch(55% .13 145); }
+.candidate-checked_out { border-left-color:oklch(55% .12 250); }
+.candidate-retired { border-left-color:oklch(58% .16 29); }
+.candidate-unknown { border-left-color:oklch(45% .02 60); }
+.resolve-form { border:1px dashed var(--line); padding:.8rem; margin-top:.7rem; }

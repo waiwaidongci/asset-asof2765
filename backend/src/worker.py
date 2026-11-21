@@ -2,6 +2,7 @@ import logging
 import time
 from pathlib import Path
 from src.services.execution import claim, execute, materialize_due
+from src.services import stocktake
 from src.utils.wakeup import wait
 
 logging.basicConfig(level=logging.INFO)
@@ -14,11 +15,13 @@ def main():
         try:
             materialize_due()
             lease = claim()
-            heartbeat.touch()
             if lease:
                 execute(lease)
-                heartbeat.touch()
-            else:
+            stocktake_lease = stocktake.claim()
+            if stocktake_lease:
+                stocktake.execute(stocktake_lease)
+            heartbeat.touch()
+            if not lease and not stocktake_lease:
                 wait()
         except Exception:
             log.exception('Worker cycle failed')
